@@ -1,5 +1,3 @@
-# from django.shortcuts import render
-from email.policy import default
 from django.http import HttpResponse
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
@@ -90,7 +88,7 @@ def post_err(request):
                 empty_points=body["emptyPoints"],
                 screen=body["screen"],
                 view_point=body["viewPoint"],
-                selector=body["params"],
+                selector=body["selector"],
                 **pub_data,
             )
 
@@ -101,7 +99,6 @@ def post_err(request):
         return response_success("成功")
 
     except Exception as err:
-        print(err)
         return response_fail(type(err).__name__, repr(err))
 
 
