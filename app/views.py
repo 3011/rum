@@ -4,8 +4,8 @@ from django.http import HttpResponse
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 import app.models as my_models
+from urllib.parse import urlparse
 import json
-import time
 
 
 def response_success(msg):
@@ -30,7 +30,7 @@ def post_err(request):
         return response_fail("MethodError", "不是POST请求")
 
     try:
-        json_data = json.loads(request.body)
+        body = json.loads(request.body)
     except:
         return response_fail("JSONError", "JSON格式有误")
 
@@ -38,68 +38,66 @@ def post_err(request):
     try:
 
         pub_data = {
-            "title": json_data["title"],
-            "url": json_data["url"],
-            "timestamp": json_data["timestamp"],
-            "full_ua": json_data["userAgent"]["full"],
-            "browser_name": json_data["userAgent"]["name"],
-            "browse_version": json_data["userAgent"]["version"],
-            "os": json_data["userAgent"]["os"],
-            "message": json_data["message"],
-            # "error_type": json_data["type"],
-            # "kind": json_data["kind"],
+            "title": body["title"],
+            "url": body["url"],
+            "domain": urlparse(body["url"]).netloc,  # 通过url提取domain
+            "timestamp": body["timestamp"],
+            "full_ua": body["userAgent"]["full"],
+            "browser_name": body["userAgent"]["name"],
+            "browse_version": body["userAgent"]["version"],
+            "os": body["userAgent"]["os"],
+            "message": body["message"],
+            # "error_type": body["type"],
+            # "kind": body["kind"],
         }
 
-        if json_data["errorType"] == "jsError":
+        error_type = body["errorType"]
+        if error_type == "jsError":
             new_Error = my_models.JSError(
-                position=json_data["position"],
-                stack=json_data["stack"],
-                selector=json_data["selector"],
+                position=body["position"],
+                stack=body["stack"],
+                selector=body["selector"],
                 **pub_data,
             )
-            new_Error.save()  # 保存至数据库
 
-        elif json_data["errorType"] == "promiseError":
+        elif error_type == "promiseError":
             new_Error = my_models.PromiseError(
-                stack=json_data["stack"],
-                selector=json_data["selector"],
+                stack=body["stack"],
+                selector=body["selector"],
                 **pub_data,
             )
-            new_Error.save()  # 保存至数据库
 
-        elif json_data["errorType"] == "resourceError":
+        elif error_type == "resourceError":
             new_Error = my_models.ResourceError(
-                filename=json_data["filename"],
-                tag_name=json_data["tagName"],
-                position=json_data["position"],
-                selector=json_data["selector"],
+                filename=body["filename"],
+                tag_name=body["tagName"],
+                position=body["position"],
+                selector=body["selector"],
                 **pub_data,
             )
-            new_Error.save()  # 保存至数据库
 
-        elif json_data["errorType"] == "xhrError":
+        elif error_type == "xhrError":
             new_Error = my_models.XhrError(
-                status=json_data["status"],
-                duration=json_data["duration"],
-                response=json_data["response"],
-                params=json_data["params"],
+                status=body["status"],
+                duration=body["duration"],
+                response=body["response"],
+                params=body["params"],
                 **pub_data,
             )
-            new_Error.save()  # 保存至数据库
 
-        elif json_data["errorType"] == "whiteScreenError":
+        elif error_type == "whiteScreenError":
             new_Error = my_models.WhiteScreenError(
-                empty_points=json_data["emptyPoints"],
-                screen=json_data["screen"],
-                view_point=json_data["viewPoint"],
-                selector=json_data["params"],
+                empty_points=body["emptyPoints"],
+                screen=body["screen"],
+                view_point=body["viewPoint"],
+                selector=body["params"],
                 **pub_data,
             )
-            new_Error.save()  # 保存至数据库
 
         else:
             return response_fail("TypeError", "未知类型")
 
+        new_Error.save()  # 保存至数据库
         return response_success("成功")
 
     except Exception as err:
