@@ -19,5 +19,6 @@ from app import views
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('api/post', views.err_post)
+    path('api/post_err', views.post_err),
+    path('api/get_all_err', views.get_all_err),
 ]
