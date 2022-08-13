@@ -53,3 +53,34 @@ class WhiteScreenError(ErrorPublic):
     screen = models.TextField()
     view_point = models.TextField()
     selector = models.TextField()
+
+
+class Performance(models.Model):
+    domain = models.TextField()
+    from_ip = models.TextField()
+    title = models.TextField()
+    url = models.TextField()
+    timestamp = models.BigIntegerField()
+    full_ua = models.TextField()
+    browser_name = models.TextField()
+    browse_version = models.TextField()
+    os = models.TextField()
+    # type = models.TextField()
+    # kind = models.TextField()
+
+    dns = models.DecimalField(max_digits=10, decimal_places=3)
+    connect = models.DecimalField(max_digits=10, decimal_places=3)
+    ttfb = models.DecimalField(max_digits=10, decimal_places=3)
+    response = models.DecimalField(max_digits=10, decimal_places=3)
+    parse_dom = models.DecimalField(max_digits=10, decimal_places=3)
+    dom_ready = models.DecimalField(max_digits=10, decimal_places=3)
+    ttfb = models.DecimalField(max_digits=10, decimal_places=3)
+    dom_content_loaded = models.DecimalField(max_digits=10, decimal_places=3)
+    to_interactive = models.DecimalField(max_digits=10, decimal_places=3)
+    load = models.DecimalField(max_digits=10, decimal_places=3)
+    first_paint = models.DecimalField(max_digits=10, decimal_places=3)
+    first_content_paint = models.DecimalField(max_digits=10, decimal_places=3)
+    first_meaningful_paint = models.DecimalField(
+        max_digits=10, decimal_places=3)
+    largest_contentful_paint = models.DecimalField(
+        max_digits=10, decimal_places=3)

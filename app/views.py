@@ -132,4 +132,56 @@ def get_all_err(request):
     data = json.loads(data)
     return response_success_with_data("成功（测试接口）", data)
 
-# def get_err_by_browser_name
+
+@csrf_exempt
+def post_performance(request):
+    if request.method != 'POST':
+        return response_fail("MethodError", "不是POST请求")
+
+    try:
+        body = json.loads(request.body)
+    except:
+        return response_fail("JSONError", "JSON格式有误")
+
+    #  TODO: JSON数据校验
+    try:
+        # 获取来源ip
+        if "HTTP_X_FORWARDED_FOR" in request.META:
+            from_ip = request.META["HTTP_X_FORWARDED_FOR"].split(',')[0]
+        else:
+            from_ip = request.META["REMOTE_ADDR"]
+
+        data = {
+            "title": body["title"],
+            "url": body["url"],
+            "domain": urlparse(body["url"]).netloc,  # 通过url提取domain
+            "from_ip": from_ip,
+            "timestamp": body["timestamp"],
+            "full_ua": body["userAgent"]["full"],
+            "browser_name": body["userAgent"]["name"],
+            "browse_version": body["userAgent"]["version"],
+            "os": body["userAgent"]["os"],
+            # "error_type": body["type"],
+            # "kind": body["kind"],
+
+            "dns": body["DNSTime"],
+            "connect": body["connectTime"],
+            "ttfb": body["ttfbTime"],
+            "response": body["responseTime"],
+            "parse_dom": body["parseDOMTime"],
+            "dom_ready": body["DOMReady"],
+            "ttfb": body["ttfbTime"],
+            "dom_content_loaded": body["domContentLoadedTime"],
+            "to_interactive": body["timeToInteractive"],
+            "load": body["loadTime"],
+            "first_paint": body["firstPaint"],
+            "first_content_paint": body["firstContentPaint"],
+            "first_meaningful_paint": body["firstMeaningfulPaint"],
+            "largest_contentful_paint": body["largestContentfulPaint"],
+        }
+
+        my_models.Performance(**data).save()
+        return response_success("成功")
+
+    except Exception as err:
+        return response_fail(type(err).__name__, repr(err))
