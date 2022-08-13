@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 import app.models as my_models
 from urllib.parse import urlparse
 import json
+import time
 
 
 def response_success(msg):
@@ -22,6 +23,14 @@ def response_fail_with_data(err_type, msg):
     return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg, "data": []}, ensure_ascii=False))
 
 
+# 维护网站列表
+def create_website(host):
+    website = my_models.Website.objects.filter(host=host)
+    if not website.exists():
+        now_timestamp = int(time.time()*1000)
+        my_models.Website(host=host, create_time=now_timestamp).save()
+
+
 @csrf_exempt
 def post_err(request):
     if request.method != 'POST':
@@ -38,7 +47,7 @@ def post_err(request):
         pub_data = {
             "title": body["title"],
             "url": body["url"],
-            "domain": urlparse(body["url"]).netloc,  # 通过url提取domain
+            "host": urlparse(body["url"]).netloc,  # 通过url提取host
             "timestamp": body["timestamp"],
             "full_ua": body["userAgent"]["full"],
             "browser_name": body["userAgent"]["name"],
@@ -96,6 +105,7 @@ def post_err(request):
             return response_fail("TypeError", "未知类型")
 
         new_Error.save()  # 保存至数据库
+        create_website(urlparse(body["url"]).netloc)  # 包括端口
         return response_success("成功")
 
     except Exception as err:
@@ -154,7 +164,7 @@ def post_performance(request):
         data = {
             "title": body["title"],
             "url": body["url"],
-            "domain": urlparse(body["url"]).netloc,  # 通过url提取domain
+            "host": urlparse(body["url"]).netloc,  # 通过url提取host
             "from_ip": from_ip,
             "timestamp": body["timestamp"],
             "full_ua": body["userAgent"]["full"],
@@ -181,6 +191,7 @@ def post_performance(request):
         }
 
         my_models.Performance(**data).save()
+        create_website(urlparse(body["url"]).netloc)  # 包括端口
         return response_success("成功")
 
     except Exception as err:

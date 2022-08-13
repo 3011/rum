@@ -4,9 +4,15 @@ from django.db import models
 # Create your models here.
 
 
+# 网站列表
+class Website(models.Model):
+    host = models.TextField(primary_key=True)
+    create_time = models.BigIntegerField()
+
+
 class ErrorPublic(models.Model):
     # 公共字段
-    domain = models.TextField()
+    host = models.TextField()
     title = models.TextField()
     url = models.TextField()
     timestamp = models.BigIntegerField()
@@ -56,7 +62,7 @@ class WhiteScreenError(ErrorPublic):
 
 
 class Performance(models.Model):
-    domain = models.TextField()
+    host = models.TextField()
     from_ip = models.TextField()
     title = models.TextField()
     url = models.TextField()
