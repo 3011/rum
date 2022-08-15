@@ -23,6 +23,11 @@ def response_fail_with_data(err_type, msg):
     return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg, "data": []}, ensure_ascii=False), content_type='application/json')
 
 
+# 通过url提取hostname
+def url_to_hostname(url):
+    return urlparse(url).hostname
+
+
 # 维护网站列表
 def create_website(hostname):
     website = my_models.Website.objects.filter(hostname=hostname)
@@ -48,7 +53,7 @@ def post_err(request):
             "title": body["title"],
             "url": body["url"],
             # 通过url提取hostname
-            "hostname": urlparse(body["url"]).hostname,
+            "hostname": url_to_hostname(body["url"]),
             "timestamp": body["timestamp"],
             "full_ua": body["userAgent"]["full"],
             "browser_name": body["userAgent"]["name"],
@@ -106,7 +111,7 @@ def post_err(request):
             return response_fail("TypeError", "未知类型")
 
         new_Error.save()  # 保存至数据库
-        create_website(urlparse(body["url"]).hostname)  # 包括端口
+        create_website(url_to_hostname(body["url"]))  # 包括端口
         return response_success("成功")
 
     except Exception as err:
@@ -134,7 +139,7 @@ def post_performance(request):
         data = {
             "title": body["title"],
             "url": body["url"],
-            "hostname": urlparse(body["url"]).netloc,  # 通过url提取hostname
+            "hostname": url_to_hostname(body["url"]),
             "from_ip": from_ip,
             "timestamp": body["timestamp"],
             "full_ua": body["userAgent"]["full"],
@@ -161,7 +166,7 @@ def post_performance(request):
         }
 
         my_models.Performance(**data).save()
-        create_website(urlparse(body["url"]).hostname)  # 包括端口
+        create_website(url_to_hostname(body["url"]))
         return response_success("成功")
 
     except Exception as err:
