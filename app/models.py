@@ -1,4 +1,3 @@
-from statistics import mode
 from django.db import models
 
 # Create your models here.
@@ -6,13 +5,13 @@ from django.db import models
 
 # 网站列表
 class Website(models.Model):
-    host = models.TextField(primary_key=True)
+    hostname = models.TextField()
     create_time = models.BigIntegerField()
 
 
 class ErrorPublic(models.Model):
     # 公共字段
-    host = models.TextField()
+    hostname = models.TextField()
     title = models.TextField()
     url = models.TextField()
     timestamp = models.BigIntegerField()
@@ -62,7 +61,7 @@ class WhiteScreenError(ErrorPublic):
 
 
 class Performance(models.Model):
-    host = models.TextField()
+    hostname = models.TextField()
     from_ip = models.TextField()
     title = models.TextField()
     url = models.TextField()

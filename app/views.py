@@ -8,27 +8,27 @@ import time
 
 
 def response_success(msg):
-    return HttpResponse(json.dumps({"ok": 1, "err_type": "", "msg": msg}, ensure_ascii=False))
+    return HttpResponse(json.dumps({"ok": 1, "err_type": "", "msg": msg}, ensure_ascii=False), content_type='application/json')
 
 
 def response_fail(err_type, msg):
-    return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg}, ensure_ascii=False))
+    return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg}, ensure_ascii=False), content_type='application/json')
 
 
 def response_success_with_data(msg, data):
-    return HttpResponse(json.dumps({"ok": 1, "err_type": "", "msg": msg, "data": data}, ensure_ascii=False))
+    return HttpResponse(json.dumps({"ok": 1, "err_type": "", "msg": msg, "data": data}, ensure_ascii=False), content_type='application/json')
 
 
 def response_fail_with_data(err_type, msg):
-    return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg, "data": []}, ensure_ascii=False))
+    return HttpResponse(json.dumps({"ok": 0, "err_type": err_type, "msg": msg, "data": []}, ensure_ascii=False), content_type='application/json')
 
 
 # 维护网站列表
-def create_website(host):
-    website = my_models.Website.objects.filter(host=host)
+def create_website(hostname):
+    website = my_models.Website.objects.filter(hostname=hostname)
     if not website.exists():
         now_timestamp = int(time.time()*1000)
-        my_models.Website(host=host, create_time=now_timestamp).save()
+        my_models.Website(hostname=hostname, create_time=now_timestamp).save()
 
 
 @csrf_exempt
@@ -47,7 +47,8 @@ def post_err(request):
         pub_data = {
             "title": body["title"],
             "url": body["url"],
-            "host": urlparse(body["url"]).netloc,  # 通过url提取host
+            # 通过url提取hostname
+            "hostname": urlparse(body["url"]).hostname,
             "timestamp": body["timestamp"],
             "full_ua": body["userAgent"]["full"],
             "browser_name": body["userAgent"]["name"],
@@ -105,7 +106,62 @@ def post_err(request):
             return response_fail("TypeError", "未知类型")
 
         new_Error.save()  # 保存至数据库
-        create_website(urlparse(body["url"]).netloc)  # 包括端口
+        create_website(urlparse(body["url"]).hostname)  # 包括端口
+        return response_success("成功")
+
+    except Exception as err:
+        return response_fail(type(err).__name__, repr(err))
+
+
+@csrf_exempt
+def post_performance(request):
+    if request.method != 'POST':
+        return response_fail("MethodError", "不是POST请求")
+
+    try:
+        body = json.loads(request.body)
+    except:
+        return response_fail("JSONError", "JSON格式有误")
+
+    #  TODO: JSON数据校验
+    try:
+        # 获取来源ip
+        if "HTTP_X_FORWARDED_FOR" in request.META:
+            from_ip = request.META["HTTP_X_FORWARDED_FOR"].split(',')[0]
+        else:
+            from_ip = request.META["REMOTE_ADDR"]
+
+        data = {
+            "title": body["title"],
+            "url": body["url"],
+            "hostname": urlparse(body["url"]).netloc,  # 通过url提取hostname
+            "from_ip": from_ip,
+            "timestamp": body["timestamp"],
+            "full_ua": body["userAgent"]["full"],
+            "browser_name": body["userAgent"]["name"],
+            "browse_version": body["userAgent"]["version"],
+            "os": body["userAgent"]["os"],
+            # "error_type": body["type"],
+            # "kind": body["kind"],
+
+            "dns": body["DNSTime"],
+            "connect": body["connectTime"],
+            "ttfb": body["ttfbTime"],
+            "response": body["responseTime"],
+            "parse_dom": body["parseDOMTime"],
+            "dom_ready": body["DOMReady"],
+            "ttfb": body["ttfbTime"],
+            "dom_content_loaded": body["domContentLoadedTime"],
+            "to_interactive": body["timeToInteractive"],
+            "load": body["loadTime"],
+            "first_paint": body["firstPaint"],
+            "first_content_paint": body["firstContentPaint"],
+            "first_meaningful_paint": body["firstMeaningfulPaint"],
+            "largest_contentful_paint": body["largestContentfulPaint"],
+        }
+
+        my_models.Performance(**data).save()
+        create_website(urlparse(body["url"]).hostname)  # 包括端口
         return response_success("成功")
 
     except Exception as err:
@@ -137,62 +193,20 @@ def get_all_err(request):
             "json", my_models.WhiteScreenError.objects.all())
 
     else:
-        return response_fail_with_data("TypeError", "未知类型")
+        return response_fail_with_data("TypeError",     "未知类型")
 
     data = json.loads(data)
     return response_success_with_data("成功（测试接口）", data)
 
 
-@csrf_exempt
-def post_performance(request):
-    if request.method != 'POST':
-        return response_fail("MethodError", "不是POST请求")
+def get_website_list(request):
+    if request.method != 'GET':
+        return response_fail("MethodError", "不是GET请求")
 
-    try:
-        body = json.loads(request.body)
-    except:
-        return response_fail("JSONError", "JSON格式有误")
-
-    #  TODO: JSON数据校验
-    try:
-        # 获取来源ip
-        if "HTTP_X_FORWARDED_FOR" in request.META:
-            from_ip = request.META["HTTP_X_FORWARDED_FOR"].split(',')[0]
-        else:
-            from_ip = request.META["REMOTE_ADDR"]
-
-        data = {
-            "title": body["title"],
-            "url": body["url"],
-            "host": urlparse(body["url"]).netloc,  # 通过url提取host
-            "from_ip": from_ip,
-            "timestamp": body["timestamp"],
-            "full_ua": body["userAgent"]["full"],
-            "browser_name": body["userAgent"]["name"],
-            "browse_version": body["userAgent"]["version"],
-            "os": body["userAgent"]["os"],
-            # "error_type": body["type"],
-            # "kind": body["kind"],
-
-            "dns": body["DNSTime"],
-            "connect": body["connectTime"],
-            "ttfb": body["ttfbTime"],
-            "response": body["responseTime"],
-            "parse_dom": body["parseDOMTime"],
-            "dom_ready": body["DOMReady"],
-            "ttfb": body["ttfbTime"],
-            "dom_content_loaded": body["domContentLoadedTime"],
-            "to_interactive": body["timeToInteractive"],
-            "load": body["loadTime"],
-            "first_paint": body["firstPaint"],
-            "first_content_paint": body["firstContentPaint"],
-            "first_meaningful_paint": body["firstMeaningfulPaint"],
-            "largest_contentful_paint": body["largestContentfulPaint"],
-        }
-
-        my_models.Performance(**data).save()
-        create_website(urlparse(body["url"]).netloc)  # 包括端口
-        return response_success("成功")
-
-    except Exception as err:
-        return response_fail(type(err).__name__, repr(err))
+    data = serializers.serialize(
+        "json", my_models.Website.objects.all())
+    data = json.loads(data)
+    website_list = []
+    for item in data:
+        website_list.append(item["fields"])
+    return response_success_with_data("成功（测试接口）", website_list)

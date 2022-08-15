@@ -20,6 +20,8 @@ from app import views
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/post_err', views.post_err),
-    path('api/get_all_err', views.get_all_err),
     path('api/post_performance', views.post_performance),
+    path('api/get_all_err', views.get_all_err),
+    path('api/get_website_list', views.get_website_list),
+
 ]
