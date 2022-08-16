@@ -104,25 +104,8 @@ def get_traffic(request):
                 (time.time()-int(timelimit)*60*60)*1000)  # 获取n小时前的时间戳
 
         data = my_models.Performance.objects.filter(**filter_data)
-        data = serializers.serialize("json", data)
-        data = json.loads(data)
-        from_ip_list = []
-        uv_list = []
-        # data_list = []
-        for item in data:
-            # data_list.append(item["fields"])
-            if item["fields"]["from_ip"] not in from_ip_list:
-                from_ip_list.append(item["fields"]["from_ip"])
-            if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in uv_list:
-                uv_list.append(
-                    item["fields"]["from_ip"]+item["fields"]["full_ua"])
+        res_data = utils.get_traffic_data(data)
 
-        # print(from_ip_list, uv_list)
-        res_data = {
-            "ip": len(from_ip_list),
-            "uv": len(uv_list),
-            "pv": len(data)
-        }
         return utils.response_success_with_data("成功（测试接口）", res_data)
 
     except Exception as err:

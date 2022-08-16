@@ -45,3 +45,24 @@ def format_errors(errors):
         "count": errors.count(),
         "data": data_list
     }
+
+
+def get_traffic_data(data):
+    data = serializers.serialize("json", data)
+    data = json.loads(data)
+    from_ip_list = []
+    uv_list = []
+    # data_list = []
+    for item in data:
+        # data_list.append(item["fields"])
+        if item["fields"]["from_ip"] not in from_ip_list:
+            from_ip_list.append(item["fields"]["from_ip"])
+        if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in uv_list:
+            uv_list.append(
+                item["fields"]["from_ip"]+item["fields"]["full_ua"])
+
+    return {
+        "ip": len(from_ip_list),
+        "uv": len(uv_list),
+        "pv": len(data)
+    }
