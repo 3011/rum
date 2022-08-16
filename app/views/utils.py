@@ -1,6 +1,7 @@
 import json
 import time
 from django.http import HttpResponse
+from django.core import serializers
 from urllib.parse import urlparse
 import app.models as my_models
 
@@ -32,3 +33,15 @@ def create_website(hostname):
     if not website.exists():
         now_timestamp = int(time.time()*1000)
         my_models.Website(hostname=hostname, create_time=now_timestamp).save()
+
+
+def format_errors(errors):
+    data = serializers.serialize("json", errors)
+    data = json.loads(data)
+    data_list = []
+    for item in data:
+        data_list.append(item["fields"])
+    return {
+        "count": errors.count(),
+        "data": data_list
+    }

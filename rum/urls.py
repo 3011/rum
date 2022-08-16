@@ -24,4 +24,5 @@ urlpatterns = [
     path('api/get_all_err', get.get_all_err),
     path('api/get_website_list', get.get_website_list),
     path('api/get_errors', get.get_errors),
+    path('api/get_traffic', get.get_traffic),
 ]

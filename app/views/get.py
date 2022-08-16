@@ -65,8 +65,7 @@ def get_errors(request):
         if timelimit != "":
             filter_data["timestamp__gte"] = int(
                 (time.time()-int(timelimit)*60*60)*1000)
-        # print(int((time.time()-24*60*60)*1000))
-        print(filter_data)
+
         js_error = my_models.JSError.objects.filter(**filter_data)
         promise_error = my_models.PromiseError.objects.filter(**filter_data)
         resource_error = my_models.ResourceError.objects.filter(**filter_data)
@@ -74,11 +73,11 @@ def get_errors(request):
         white_screen_error = my_models.WhiteScreenError.objects.filter(
             **filter_data)
 
-        errors = {"js_error": q1(js_error),
-                  "promise_error": q1(promise_error),
-                  "resource_error": q1(resource_error),
-                  "xhr_error": q1(xhr_error),
-                  "white_screen_error": q1(white_screen_error),
+        errors = {"js_error": utils.utils.format_errors(js_error),
+                  "promise_error": utils.format_errors(promise_error),
+                  "resource_error": utils.format_errors(resource_error),
+                  "xhr_error": utils.format_errors(xhr_error),
+                  "white_screen_error": utils.format_errors(white_screen_error),
                   }
 
         return utils.response_success_with_data("成功（测试接口）", errors)
@@ -87,13 +86,44 @@ def get_errors(request):
         return utils.response_fail(type(err).__name__, repr(err))
 
 
-def q1(a):
-    data = serializers.serialize("json", a)
-    data = json.loads(data)
-    data_list = []
-    for item in data:
-        data_list.append(item["fields"])
-    return {
-        "count": a.count(),
-        "data": data_list
-    }
+def get_traffic(request):
+    if request.method != 'GET':
+        return utils.response_fail("MethodError", "不是GET请求")
+
+    try:
+        hostname = request.GET.get("hostname", default="")
+        timelimit = request.GET.get("time", default="")
+        if hostname == "":
+            return utils.response_fail("HostnameError", "hostname为空")
+
+        filter_data = {
+            "hostname": hostname,
+        }
+        if timelimit != "":
+            filter_data["timestamp__gte"] = int(
+                (time.time()-int(timelimit)*60*60)*1000)  # 获取n小时前的时间戳
+
+        data = my_models.Performance.objects.filter(**filter_data)
+        data = serializers.serialize("json", data)
+        data = json.loads(data)
+        from_ip_list = []
+        uv_list = []
+        # data_list = []
+        for item in data:
+            # data_list.append(item["fields"])
+            if item["fields"]["from_ip"] not in from_ip_list:
+                from_ip_list.append(item["fields"]["from_ip"])
+            if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in uv_list:
+                uv_list.append(
+                    item["fields"]["from_ip"]+item["fields"]["full_ua"])
+
+        # print(from_ip_list, uv_list)
+        res_data = {
+            "ip": len(from_ip_list),
+            "uv": len(uv_list),
+            "pv": len(data)
+        }
+        return utils.response_success_with_data("成功（测试接口）", res_data)
+
+    except Exception as err:
+        return utils.response_fail(type(err).__name__, repr(err))
