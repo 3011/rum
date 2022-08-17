@@ -110,3 +110,120 @@ def get_traffic(request):
 
     except Exception as err:
         return utils.response_fail(type(err).__name__, repr(err))
+
+
+def get_performance(request):
+    if request.method != 'GET':
+        return utils.response_fail("MethodError", "不是GET请求")
+
+    try:
+        hostname = request.GET.get("hostname", default="")
+
+        if hostname == "":
+            return utils.response_fail("HostnameError", "hostname为空")
+
+        filter_data = {
+            "hostname": hostname,
+            "timestamp__gte": int((time.time()-7*24*60*60)*1000)  # 7天前的时间戳
+        }
+
+        data = my_models.Performance.objects.filter(**filter_data)
+        res_data = {"24h": get_performance_24h(data),
+                    "7d": get_performance_7d(data)}
+
+        return utils.response_success_with_data("成功（测试接口）", res_data)
+
+    except Exception as err:
+        return utils.response_fail(type(err).__name__, repr(err))
+
+
+def get_performance_24h(data):
+    data = serializers.serialize("json", data)
+    data = json.loads(data)
+
+    res_data = {}
+    now = time.time()
+    for i in range(23, -1, -1):
+        res_data[time.strftime("%H:00", time.localtime(now-i*60*60))] = {
+            "count": 0,
+            "dns": 0,
+            "connect": 0,
+            "ttfb": 0,
+            "response": 0,
+            "parse_dom": 0,
+            "dom_ready": 0,
+            "dom_content_loaded": 0,
+            "to_interactive": 0,
+            "load": 0,
+            "first_paint": 0,
+            "first_content_paint": 0,
+            "first_meaningful_paint": 0,
+            "largest_contentful_paint": 0
+        }
+
+    for item in data:
+        hour = time.strftime("%H:00", time.localtime(
+            item["fields"]["timestamp"]/1000))
+
+        for key in res_data[hour]:
+            if key == "count":
+                res_data[hour][key] += 1
+                continue
+            res_data[hour][key] += item["fields"][key]
+
+    for key in res_data:
+        for k in res_data[key]:
+            if k == "count":
+                if res_data[key][k] == 0:
+                    break
+                continue
+            res_data[key][k] = round(
+                res_data[key][k]/res_data[key]["count"], 3)
+
+    return res_data
+
+
+def get_performance_7d(data):
+    data = serializers.serialize("json", data)
+    data = json.loads(data)
+
+    res_data = {}
+    now = time.time()
+    for i in range(6, -1, -1):
+        res_data[time.strftime("%m-%d", time.localtime(now-i*24*60*60))] = {
+            "count": 0,
+            "dns": 0,
+            "connect": 0,
+            "ttfb": 0,
+            "response": 0,
+            "parse_dom": 0,
+            "dom_ready": 0,
+            "dom_content_loaded": 0,
+            "to_interactive": 0,
+            "load": 0,
+            "first_paint": 0,
+            "first_content_paint": 0,
+            "first_meaningful_paint": 0,
+            "largest_contentful_paint": 0
+        }
+
+    for item in data:
+        day = time.strftime("%m-%d", time.localtime(
+            item["fields"]["timestamp"]/1000))
+
+        for key in res_data[day]:
+            if key == "count":
+                res_data[day][key] += 1
+                continue
+            res_data[day][key] += item["fields"][key]
+
+    for key in res_data:
+        for k in res_data[key]:
+            if k == "count":
+                if res_data[key][k] == 0:
+                    break
+                continue
+            res_data[key][k] = round(
+                res_data[key][k]/res_data[key]["count"], 3)
+
+    return res_data

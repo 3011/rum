@@ -25,4 +25,5 @@ urlpatterns = [
     path('api/get_website_list', get.get_website_list),
     path('api/get_errors', get.get_errors),
     path('api/get_traffic', get.get_traffic),
+    path('api/get_performance', get.get_performance),
 ]
