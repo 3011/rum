@@ -19,8 +19,8 @@ from app.views import get, post
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('api/post_err', post.post_err),
-    path('api/post_performance', post.post_performance),
+    path('api/post_err', post.post_data),
+    # path('api/post_performance', post.post_performance),
     path('api/get_all_err', get.get_all_err),
     path('api/get_website_list', get.get_website_list),
     path('api/get_errors', get.get_errors),
