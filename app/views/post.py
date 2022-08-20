@@ -124,12 +124,12 @@ def post_data(request):
 
     #  TODO: JSON数据校验
     try:
-        if body["type"] == "error":
+        if ["kind"] == "stability" and body["type"] == "error":
             return post_err(body)
-        elif body["type"] == "experience":
+        elif body["kind"] == "experience" and body["type"] == "timing":
             return post_performance(request, body)
         else:
-            return utils.response_fail("TypeError", "未知type")
+            return utils.response_fail("TypeError", "未知类型")
 
     except Exception as err:
         return utils.response_fail(type(err).__name__, repr(err))
