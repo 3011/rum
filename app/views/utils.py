@@ -28,11 +28,12 @@ def url_to_hostname(url):
 
 
 # 维护网站列表
-def create_website(hostname):
+def create_website(hostname, name):
     website = my_models.Website.objects.filter(hostname=hostname)
     if not website.exists():
         now_timestamp = int(time.time()*1000)
-        my_models.Website(hostname=hostname, create_time=now_timestamp).save()
+        my_models.Website(hostname=hostname,
+                          create_time=now_timestamp, name=name).save()
 
 
 def format_errors(errors):

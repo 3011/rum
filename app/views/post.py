@@ -74,7 +74,6 @@ def post_err(body):
         return utils.response_fail("TypeError", "未知类型")
 
     new_Error.save()  # 保存至数据库
-    utils.create_website(utils.url_to_hostname(body["url"]))  # 包括端口
     return utils.response_success("成功")
 
 
@@ -115,7 +114,6 @@ def post_performance(request, body):
     }
 
     my_models.Performance(**data).save()
-    utils.create_website(utils.url_to_hostname(body["url"]))
     return utils.response_success("成功")
 
 
@@ -189,6 +187,8 @@ def post_xhr(body):
         is_async=body["async"],
         create_time=body["createTime"],
     ).save()
+    utils.create_website(utils.url_to_hostname(
+        body["url"]), title=body["title"])
     return utils.response_success("成功")
 
 
