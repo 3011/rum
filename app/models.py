@@ -7,6 +7,8 @@ from django.db import models
 class Website(models.Model):
     hostname = models.TextField()
     create_time = models.BigIntegerField()
+    name = models.TextField(default="")
+    tags = models.TextField(default="")
 
 
 class ErrorPublic(models.Model):

@@ -124,7 +124,7 @@ def post_data(request):
 
     #  TODO: JSON数据校验
     try:
-        if ["kind"] == "stability" and body["type"] == "error":
+        if body["kind"] == "stability" and body["type"] == "error":
             return post_err(body)
         elif body["kind"] == "experience" and body["type"] == "timing":
             return post_performance(request, body)

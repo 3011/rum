@@ -3,7 +3,7 @@ import requests
 import random
 
 
-url = "http://localhost/"
+url = "http://localhost:8000/"
 
 
 def performance():
@@ -77,7 +77,7 @@ def main():
             performance()
         else:
             errors()
-        time.sleep(r*15)
+        # time.sleep(r*15)
 
 
 main()
