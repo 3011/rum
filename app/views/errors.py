@@ -89,7 +89,7 @@ def error_list(request):
     try:
         hostname = request.GET.get("url")
         time_type = request.GET.get("timeType")
-        data_type = request.GET.get("dataType")
+        data_type = request.GET.get("errorType")
 
         filter_data = {"hostname": hostname}
 

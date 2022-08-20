@@ -32,6 +32,7 @@ urlpatterns = [
     path('manage/changeWebTag', manage.change_web_tag),
     path('overview/webError', errors.web_error),
     path('overview/errorList', errors.error_list),
-    # path('overview/userAction', action.get_user_action),
+    path('overview/userAction', action.user_action),
     path('overview/timing', timing.timing),
+    path('performance/timingList', timing.time_list),
 ]

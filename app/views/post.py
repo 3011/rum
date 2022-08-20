@@ -1,3 +1,4 @@
+
 import json
 from django.views.decorators.csrf import csrf_exempt
 from . import utils
@@ -15,7 +16,6 @@ def post_err(body):
         "browser_name": body["userAgent"]["name"],
         "browse_version": body["userAgent"]["version"],
         "os": body["userAgent"]["os"],
-        "message": body["message"],
         # "error_type": body["type"],
         # "kind": body["kind"],
     }
@@ -23,14 +23,16 @@ def post_err(body):
     error_type = body["errorType"]
     if error_type == "jsError":
         new_Error = my_models.JSError(
+            message=body["message"],
             position=body["position"],
             stack=body["stack"],
             selector=body["selector"],
             **pub_data,
         )
 
-    elif error_type == "promiseError":
+    elif error_type == "PromiseError":
         new_Error = my_models.PromiseError(
+            message=body["message"],
             stack=body["stack"],
             selector=body["selector"],
             **pub_data,
@@ -38,24 +40,17 @@ def post_err(body):
 
     elif error_type == "resourceError":
         new_Error = my_models.ResourceError(
+            message=body["message"],
             filename=body["filename"],
             tag_name=body["tagName"],
-            position=body["position"],
+            # position=body["position"],
             selector=body["selector"],
-            **pub_data,
-        )
-
-    elif error_type == "xhrError":
-        new_Error = my_models.XhrError(
-            status=body["status"],
-            duration=body["duration"],
-            response=body["response"],
-            params=body["params"],
             **pub_data,
         )
 
     elif error_type == "whiteScreenError":
         new_Error = my_models.WhiteScreenError(
+            # message=body["message"],
             empty_points=body["emptyPoints"],
             screen=body["screen"],
             view_point=body["viewPoint"],
@@ -63,6 +58,18 @@ def post_err(body):
             **pub_data,
         )
 
+    elif error_type == "xhrError":
+        new_Error = my_models.XhrError(
+            pathname=body["pathname"],
+            status=body["status"],
+            duration=body["duration"],
+            method=body["method"],
+            response=body["response"],
+            params=body["params"],
+            is_async=body["async"],
+            create_time=body["createTime"],
+            **pub_data,
+        )
     else:
         return utils.response_fail("TypeError", "未知类型")
 
@@ -112,6 +119,79 @@ def post_performance(request, body):
     return utils.response_success("成功")
 
 
+def post_user_action(body):
+    if body["type"] == "pv":
+        my_models.PV(
+            url=body["url"],
+            hostname=utils.url_to_hostname(body["url"]),
+            timestamp=body["timestamp"],
+            full_ua=body["userAgent"]["full"],
+            browser_name=body["userAgent"]["name"],
+            browse_version=body["userAgent"]["version"],
+
+            os=body["userAgent"]["os"],
+            start_time=body["startTime"],
+            page_url=body["pageURL"],
+            referrer=body["referrer"],
+        ).save()
+        return utils.response_success("成功")
+    elif body["type"] == "uv":
+        my_models.UV(
+            url=body["url"],
+            hostname=utils.url_to_hostname(body["url"]),
+            timestamp=body["timestamp"],
+            full_ua=body["userAgent"]["full"],
+            browser_name=body["userAgent"]["name"],
+            browse_version=body["userAgent"]["version"],
+            os=body["userAgent"]["os"],
+
+            start_time=body["startTime"],
+            ip=body["ip"],
+            page_url=body["pageURL"],
+            referrer=body["referrer"],
+        ).save
+        return utils.response_success("成功")
+    elif body["type"] == "duration":
+        my_models.Duration(
+            url=body["url"],
+            hostname=utils.url_to_hostname(body["url"]),
+            timestamp=body["timestamp"],
+            full_ua=body["userAgent"]["full"],
+            browser_name=body["userAgent"]["name"],
+            browse_version=body["userAgent"]["version"],
+            os=body["userAgent"]["os"],
+
+            duration=body["duration"],
+            page_url=body["pageURL"],
+        ).save
+        return utils.response_success("成功")
+    else:
+        return utils.response_fail("TypeError", "未知类型")
+
+
+def post_xhr(body):
+    my_models.XhrError(
+        title=body["title"],
+        url=body["url"],
+        hostname=utils.url_to_hostname(body["url"]),
+        timestamp=body["timestamp"],
+        full_ua=body["userAgent"]["full"],
+        browser_name=body["userAgent"]["name"],
+        browse_version=body["userAgent"]["version"],
+        os=body["userAgent"]["os"],
+
+        pathname=body["pathname"],
+        status=body["status"],
+        duration=body["duration"],
+        method=body["method"],
+        response=body["response"],
+        params=body["params"],
+        is_async=body["async"],
+        create_time=body["createTime"],
+    ).save()
+    return utils.response_success("成功")
+
+
 @csrf_exempt
 def post_data(request):
     if request.method != 'POST':
@@ -126,8 +206,12 @@ def post_data(request):
     try:
         if body["kind"] == "stability" and body["type"] == "error":
             return post_err(body)
+        elif body["kind"] == "stability" and body["eventType"] == "load":
+            return post_xhr(body)
         elif body["kind"] == "experience" and body["type"] == "timing":
             return post_performance(request, body)
+        elif body["kind"] == "userAction":
+            return post_user_action(body)
         else:
             return utils.response_fail("TypeError", "未知类型")
 
