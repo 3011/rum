@@ -17,7 +17,7 @@ def user_action(request):
         if data_type == "userAciton":
             res_data = get_user_action(hostname, time_type)
         elif data_type == "HTTPdata":
-            get_HTTP_data(hostname, time_type)
+            res_data = get_http_data(hostname, time_type)
         else:
             return utils.response_fail("DataTypeError", "未知dataType")
 
@@ -35,7 +35,7 @@ def get_user_action(hostname, time_type):
     temp_list = []
     if time_type == "week":
         redundant_time = time.time() % (24*3600)
-        week_ago = time.time() - 6*24*3600 - redundant_time
+        week_ago = time.time() - 5*24*3600 - redundant_time
         filter_data["timestamp__gte"] = week_ago*1000
         for i in range(7):
             day = time.strftime(
@@ -69,7 +69,7 @@ def get_user_action(hostname, time_type):
             day = time.strftime(
                 "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
             if day not in time_list:
-                print("day not in time_list")
+
                 continue
             time_index = time_list.index(day)
             if item["fields"]["from_ip"] not in temp_list[time_index]["ip_list"]:
@@ -84,7 +84,7 @@ def get_user_action(hostname, time_type):
             hour = time.strftime(
                 "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
             if hour not in time_list:
-                print("day not in time_list")
+
                 continue
             time_index = time_list.index(hour)
             if item["fields"]["from_ip"] not in temp_list[time_index]["ip_list"]:
@@ -102,5 +102,57 @@ def get_user_action(hostname, time_type):
     return res_data
 
 
-def get_HTTP_data():
-    pass
+def get_http_data(hostname, time_type):
+    filter_data = {"hostname": hostname}
+    time_list = []
+    res_data = []
+    if time_type == "week":
+        redundant_time = time.time() % (24*3600)
+        week_ago = time.time() - 5*24*3600 - redundant_time
+        filter_data["timestamp__gte"] = week_ago*1000
+        for i in range(7):
+            day = time.strftime(
+                "%m-%d", time.localtime(week_ago+i*24*3600))
+            time_list.append(day)
+            res_data.append({"time": day, "HTTPCount": 0,
+                            "HTTPFail": 0})
+    elif time_type == "day":
+        redundant_time = time.time() % 3600
+        day_ago = time.time() - 23*3600 - redundant_time
+        filter_data["timestamp__gte"] = day_ago*1000
+        for i in range(24):
+            hour = time.strftime(
+                "%H:00", time.localtime(day_ago+i*3600))
+            time_list.append(hour)
+            res_data.append({"time": hour, "HTTPCount": 0,
+                            "HTTPFail": 0})
+    else:
+        return utils.response_fail("TimeTypeError", "未知timeType")
+
+    data = my_models.XhrError.objects.filter(**filter_data)
+
+    data = serializers.serialize("json", data)
+    data = json.loads(data)
+
+    for item in data:
+        if time_type == "week":
+            day = time.strftime(
+                "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
+            if day not in time_list:
+                continue
+            time_index = time_list.index(day)
+            res_data[time_index]["HTTPCount"] += 1
+            if "200" not in item["fields"]["status"]:
+                res_data[time_index]["HTTPFail"] += 1
+
+        elif time_type == "day":
+            hour = time.strftime(
+                "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
+            if hour not in time_list:
+                continue
+            time_index = time_list.index(hour)
+            res_data[time_index]["HTTPCount"] += 1
+            if "200" not in item["fields"]["status"]:
+                res_data[time_index]["HTTPFail"] += 1
+
+    return res_data

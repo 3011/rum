@@ -20,7 +20,7 @@ def web_error(request):
         res_data = []
         if time_type == "week":
             redundant_time = time.time() % (24*3600)
-            week_ago = time.time() - 6*24*3600 - redundant_time
+            week_ago = time.time() - 5*24*3600 - redundant_time
             filter_data["timestamp__gte"] = week_ago*1000
             for i in range(7):
                 day = time.strftime(
@@ -95,7 +95,7 @@ def error_list(request):
 
         if time_type == "week":
             redundant_time = time.time() % (24*3600)
-            week_ago = time.time() - 7*24*3600 - redundant_time
+            week_ago = time.time() - 5*24*3600 - redundant_time
             filter_data["timestamp__gte"] = week_ago*1000
         elif time_type == "day":
             redundant_time = time.time() % 3600
