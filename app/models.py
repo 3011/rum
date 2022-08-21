@@ -106,6 +106,7 @@ class PV(models.Model):
     browse_version = models.TextField()
     os = models.TextField()
 
+    ip = models.TextField(default="127.0.0.1")
     start_time = models.BigIntegerField()
     page_url = models.TextField()
     referrer = models.TextField()
@@ -137,5 +138,7 @@ class Duration(models.Model):
     browse_version = models.TextField()
     os = models.TextField()
 
+    ip = models.TextField(default="127.0.0.1")
+    start_time = models.BigIntegerField(default=0)
     duration = models.FloatField()
     page_url = models.TextField()

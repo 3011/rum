@@ -117,8 +117,13 @@ def post_performance(request, body):
     return utils.response_success("成功")
 
 
-def post_user_action(body):
+def post_user_action(request, body):
     if body["type"] == "pv":
+        # 获取来源ip
+        if "HTTP_X_FORWARDED_FOR" in request.META:
+            from_ip = request.META["HTTP_X_FORWARDED_FOR"].split(',')[0]
+        else:
+            from_ip = request.META["REMOTE_ADDR"]
         my_models.PV(
             url=body["url"],
             hostname=utils.url_to_hostname(body["url"]),
@@ -127,6 +132,7 @@ def post_user_action(body):
             browser_name=body["userAgent"]["name"],
             browse_version=body["userAgent"]["version"],
 
+            ip=from_ip,
             os=body["userAgent"]["os"],
             start_time=body["startTime"],
             page_url=body["pageURL"],
@@ -161,6 +167,8 @@ def post_user_action(body):
             browse_version=body["userAgent"]["version"],
             os=body["userAgent"]["os"],
 
+            ip=body["ip"],
+            start_time=body["startTime"],
             duration=body["duration"],
             page_url=body["pageURL"],
         ).save
@@ -211,7 +219,7 @@ def post_data(request):
         elif body["kind"] == "experience" and body["type"] == "timing":
             return post_performance(request, body)
         elif body["kind"] == "userAction":
-            return post_user_action(body)
+            return post_user_action(request, body)
         else:
             return utils.response_fail("TypeError", "未知类型")
 

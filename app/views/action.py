@@ -55,12 +55,12 @@ def get_user_action(hostname, time_type):
         return utils.response_fail("TimeTypeError", "未知timeType")
 
     pv_data = my_models.PV.objects.filter(**filter_data)
-    uv_data = my_models.PV.objects.filter(**filter_data)
+    # uv_data = my_models.UV.objects.filter(**filter_data)
 
     pv_data = serializers.serialize("json", pv_data)
     pv_data = json.loads(pv_data)
-    uv_data = serializers.serialize("json", uv_data)
-    uv_data = json.loads(uv_data)
+    # uv_data = serializers.serialize("json", uv_data)
+    # uv_data = json.loads(uv_data)
 
     for item in pv_data:
         if time_type == "week":
@@ -69,59 +69,62 @@ def get_user_action(hostname, time_type):
             if day not in time_list:
                 continue
             time_index = time_list.index(day)
+            res_data[time_index]["pvCount"] += 1
+
+            ####
+            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+                temp_list[time_index]["uv_list"].append(
+                    item["fields"]["ip"]+item["fields"]["full_ua"])
             if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
                 temp_list[time_index]["ip_list"].append(
                     item["fields"]["ip"])
-            # if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
-            #     temp_list[time_index]["uv_list"].append(
-            #         item["fields"]["from_ip"]+item["fields"]["full_ua"])
 
-            # res_data[time_index]["count"] += 1
         elif time_type == "day":
             hour = time.strftime(
                 "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
             if hour not in time_list:
-
                 continue
             time_index = time_list.index(hour)
+            res_data[time_index]["pvCount"] += 1
+
+            ####
+            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+                temp_list[time_index]["uv_list"].append(
+                    item["fields"]["ip"]+item["fields"]["full_ua"])
             if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
                 temp_list[time_index]["ip_list"].append(
                     item["fields"]["ip"])
-            # if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
-                # temp_list[time_index]["uv_list"].append(
-                #     item["fields"]["from_ip"]+item["fields"]["full_ua"])
 
-    for item in uv_data:
-        if time_type == "week":
-            day = time.strftime(
-                "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
-            if day not in time_list:
-                continue
-            time_index = time_list.index(day)
-            # if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
-            #     temp_list[time_index]["ip_list"].append(
-            #         item["fields"]["ip"])
-            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
-                temp_list[time_index]["uv_list"].append(
-                    item["fields"]["ip"]+item["fields"]["full_ua"])
+    # for item in uv_data:
+    #     if time_type == "week":
+    #         day = time.strftime(
+    #             "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
+    #         if day not in time_list:
+    #             continue
+    #         time_index = time_list.index(day)
 
-            # res_data[time_index]["count"] += 1
-        elif time_type == "day":
-            hour = time.strftime(
-                "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
-            if hour not in time_list:
+    #         if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+    #             temp_list[time_index]["uv_list"].append(
+    #                 item["fields"]["ip"]+item["fields"]["full_ua"])
+    #         if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
+    #             temp_list[time_index]["ip_list"].append(
+    #                 item["fields"]["ip"])
 
-                continue
-            time_index = time_list.index(hour)
-            # if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
-            #     temp_list[time_index]["ip_list"].append(
-            #         item["fields"]["ip"])
-            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
-                temp_list[time_index]["uv_list"].append(
-                    item["fields"]["ip"]+item["fields"]["full_ua"])
+    #     elif time_type == "day":
+    #         hour = time.strftime(
+    #             "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
+    #         if hour not in time_list:
+    #             continue
+    #         time_index = time_list.index(hour)
+
+    #         if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+    #             temp_list[time_index]["uv_list"].append(
+    #                 item["fields"]["ip"]+item["fields"]["full_ua"])
+    #         if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
+    #             temp_list[time_index]["ip_list"].append(
+    #                 item["fields"]["ip"])
 
     for i, n in enumerate(temp_list):
-        res_data[i]["pvCount"] = len(n["ip_list"])
         res_data[i]["uvCount"] = len(n["uv_list"])
         res_data[i]["ipCount"] = len(n["ip_list"])
 
@@ -179,3 +182,27 @@ def get_http_data(hostname, time_type):
                 res_data[time_index]["HTTPFail"] += 1
 
     return res_data
+
+
+def get_list(request):
+    if request.method != 'GET':
+        return utils.response_fail("MethodError", "不是GET请求")
+
+    try:
+        hostname = request.GET.get("url")
+        data_type = request.GET.get("dataType")
+
+        if data_type == "pv":
+            data = my_models.PV.objects.filter(hostname=hostname)
+        elif data_type == "uv":
+            data = my_models.UV.objects.filter(hostname=hostname)
+        elif data_type == "duration":
+            data = my_models.Duration.objects.filter(hostname=hostname)
+        else:
+            return utils.response_fail("DataTypeError", "未知dataType")
+
+        data = utils.format_errors(data)
+        return utils.response_success_with_data("成功", data)
+
+    except Exception as err:
+        return utils.response_fail(type(err).__name__, repr(err))

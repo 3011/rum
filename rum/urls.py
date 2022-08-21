@@ -35,4 +35,5 @@ urlpatterns = [
     path('overview/timing', timing.timing),
     path('performance/timingList', timing.time_list),
     path('HTTP/errorList', http.error_list),
+    path('userAction/getList', action.get_list),
 ]

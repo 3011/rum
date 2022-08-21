@@ -105,7 +105,7 @@ def errors():
     }, {
         "title": "monitor-SDK",
         "url": "http://localhost:8080/",
-        "timestamp": 1661064641530,
+        "timestamp": time.time()*1000,
         "userAgent": {
             "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
             "name": "chrome",
@@ -124,7 +124,7 @@ def errors():
     }, {
         "title": "monitor-SDK",
         "url": "http://localhost:8080/",
-        "timestamp": 1661064500336,
+        "timestamp": time.time()*1000,
         "userAgent": {
             "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
             "name": "chrome",
