@@ -5,6 +5,34 @@ from . import utils
 import app.models as my_models
 
 
+@csrf_exempt
+def post_data(request):
+    if request.method != 'POST':
+        return utils.response_fail("MethodError", "不是POST请求")
+
+    try:
+        body = json.loads(request.body)
+    except:
+        return utils.response_fail("JSONError", "JSON格式有误")
+
+    #  TODO: JSON数据校验
+    try:
+        if body["kind"] == "stability" and body["type"] == "error":
+            return post_err(body)
+        elif body["kind"] == "stability" and body["eventType"] == "load":
+            return post_xhr(body)
+        elif body["kind"] == "experience" and body["type"] == "timing":
+            return post_performance(request, body)
+        elif body["kind"] == "userAction":
+            return post_user_action(request, body)
+        else:
+            return utils.response_fail("TypeError", "未知类型")
+
+    except Exception as err:
+        print(err)
+        return utils.response_fail(type(err).__name__, repr(err))
+
+
 def post_err(body):
     pub_data = {
         "title": body["title"],
@@ -142,6 +170,7 @@ def post_user_action(request, body):
             body["url"]), body["title"])
         return utils.response_success("成功")
     elif body["type"] == "uv":
+        print(body)
         my_models.UV(
             url=body["url"],
             hostname=utils.url_to_hostname(body["url"]),
@@ -155,9 +184,15 @@ def post_user_action(request, body):
             ip=body["ip"],
             page_url=body["pageURL"],
             referrer=body["referrer"],
-        ).save
+        ).save()
         return utils.response_success("成功")
     elif body["type"] == "duration":
+        print(body)
+        if body["IP"]:
+            ip = body["IP"]
+        else:
+            ip = ""
+
         my_models.Duration(
             url=body["url"],
             hostname=utils.url_to_hostname(body["url"]),
@@ -167,11 +202,11 @@ def post_user_action(request, body):
             browse_version=body["userAgent"]["version"],
             os=body["userAgent"]["os"],
 
-            ip=body["ip"],
+            ip=ip,
             start_time=body["startTime"],
             duration=body["duration"],
             page_url=body["pageURL"],
-        ).save
+        ).save()
         return utils.response_success("成功")
     else:
         return utils.response_fail("TypeError", "未知类型")
@@ -198,30 +233,3 @@ def post_xhr(body):
         create_time=body["createTime"],
     ).save()
     return utils.response_success("成功")
-
-
-@csrf_exempt
-def post_data(request):
-    if request.method != 'POST':
-        return utils.response_fail("MethodError", "不是POST请求")
-
-    try:
-        body = json.loads(request.body)
-    except:
-        return utils.response_fail("JSONError", "JSON格式有误")
-
-    #  TODO: JSON数据校验
-    try:
-        if body["kind"] == "stability" and body["type"] == "error":
-            return post_err(body)
-        elif body["kind"] == "stability" and body["eventType"] == "load":
-            return post_xhr(body)
-        elif body["kind"] == "experience" and body["type"] == "timing":
-            return post_performance(request, body)
-        elif body["kind"] == "userAction":
-            return post_user_action(request, body)
-        else:
-            return utils.response_fail("TypeError", "未知类型")
-
-    except Exception as err:
-        return utils.response_fail(type(err).__name__, repr(err))

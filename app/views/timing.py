@@ -5,6 +5,20 @@ import app.models as my_models
 from . import utils
 
 
+def time_list(request):
+    if request.method != 'GET':
+        return utils.response_fail("MethodError", "不是GET请求")
+
+    try:
+        hostname = request.GET.get("url")
+        data = my_models.Performance.objects.filter(hostname=hostname)
+        data = utils.format_errors(data)
+        return utils.response_success_with_data("成功", data)
+
+    except Exception as err:
+        return utils.response_fail(type(err).__name__, repr(err))
+
+
 def timing(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -161,17 +175,3 @@ def get_performance_7d(data, time_list):
                 key[k]/key["count"], 3)
 
     return res_data
-
-
-def time_list(request):
-    if request.method != 'GET':
-        return utils.response_fail("MethodError", "不是GET请求")
-
-    try:
-        hostname = request.GET.get("url")
-        data = my_models.Performance.objects.filter(hostname=hostname)
-        data = utils.format_errors(data)
-        return utils.response_success_with_data("成功", data)
-
-    except Exception as err:
-        return utils.response_fail(type(err).__name__, repr(err))

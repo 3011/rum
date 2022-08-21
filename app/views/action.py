@@ -5,6 +5,30 @@ import app.models as my_models
 from . import utils
 
 
+def get_list(request):
+    if request.method != 'GET':
+        return utils.response_fail("MethodError", "不是GET请求")
+
+    try:
+        hostname = request.GET.get("url")
+        data_type = request.GET.get("dataType")
+
+        if data_type == "pv":
+            data = my_models.PV.objects.filter(hostname=hostname)
+        elif data_type == "uv":
+            data = my_models.UV.objects.filter(hostname=hostname)
+        elif data_type == "duration":
+            data = my_models.Duration.objects.filter(hostname=hostname)
+        else:
+            return utils.response_fail("DataTypeError", "未知dataType")
+
+        data = utils.format_errors(data)
+        return utils.response_success_with_data("成功", data)
+
+    except Exception as err:
+        return utils.response_fail(type(err).__name__, repr(err))
+
+
 def user_action(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -182,27 +206,3 @@ def get_http_data(hostname, time_type):
                 res_data[time_index]["HTTPFail"] += 1
 
     return res_data
-
-
-def get_list(request):
-    if request.method != 'GET':
-        return utils.response_fail("MethodError", "不是GET请求")
-
-    try:
-        hostname = request.GET.get("url")
-        data_type = request.GET.get("dataType")
-
-        if data_type == "pv":
-            data = my_models.PV.objects.filter(hostname=hostname)
-        elif data_type == "uv":
-            data = my_models.UV.objects.filter(hostname=hostname)
-        elif data_type == "duration":
-            data = my_models.Duration.objects.filter(hostname=hostname)
-        else:
-            return utils.response_fail("DataTypeError", "未知dataType")
-
-        data = utils.format_errors(data)
-        return utils.response_success_with_data("成功", data)
-
-    except Exception as err:
-        return utils.response_fail(type(err).__name__, repr(err))

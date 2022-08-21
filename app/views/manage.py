@@ -6,6 +6,7 @@ import app.models as my_models
 from . import utils
 
 
+# 获取网站列表
 def get_all_web(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -21,6 +22,7 @@ def get_all_web(request):
     return utils.response_success_with_data("成功查询", website_list)
 
 
+# 修改网站名称
 @csrf_exempt
 def change_web_name(request):
     if request.method != 'POST':
@@ -43,6 +45,7 @@ def change_web_name(request):
         return utils.response_fail(type(err).__name__, repr(err))
 
 
+# 修改网站tag
 @csrf_exempt
 def change_web_tag(request):
     if request.method != 'POST':
