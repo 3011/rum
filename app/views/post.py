@@ -132,6 +132,8 @@ def post_user_action(body):
             page_url=body["pageURL"],
             referrer=body["referrer"],
         ).save()
+        utils.create_website(utils.url_to_hostname(
+            body["url"]), body["title"])
         return utils.response_success("成功")
     elif body["type"] == "uv":
         my_models.UV(
@@ -187,8 +189,6 @@ def post_xhr(body):
         is_async=body["async"],
         create_time=body["createTime"],
     ).save()
-    utils.create_website(utils.url_to_hostname(
-        body["url"]), title=body["title"])
     return utils.response_success("成功")
 
 

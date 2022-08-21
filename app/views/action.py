@@ -14,7 +14,7 @@ def user_action(request):
         time_type = request.GET.get("timeType")
         data_type = request.GET.get("dataType")
 
-        if data_type == "userAciton":
+        if data_type == "userAction":
             res_data = get_user_action(hostname, time_type)
         elif data_type == "HTTPdata":
             res_data = get_http_data(hostname, time_type)
@@ -28,58 +28,55 @@ def user_action(request):
 
 
 def get_user_action(hostname, time_type):
-
     filter_data = {"hostname": hostname}
     time_list = []
     res_data = []
     temp_list = []
+    now = time.time()
     if time_type == "week":
-        redundant_time = time.time() % (24*3600)
-        week_ago = time.time() - 5*24*3600 - redundant_time
-        filter_data["timestamp__gte"] = week_ago*1000
         for i in range(7):
-            day = time.strftime(
-                "%m-%d", time.localtime(week_ago+i*24*3600))
-            time_list.append(day)
-            res_data.append({"time": day, "pvCount": 0,
+            day = time.strftime("%m-%d", time.localtime(now))
+            time_list.insert(0, day)
+            res_data.insert(0, {"time": day, "pvCount": 0,
                             "uvCount": 0, "ipCount": 0})
-            temp_list.append({"ip_list": [], "uv_list": []})
+            temp_list.insert(0, {"ip_list": [], "uv_list": []})
+            now = now - 24*3600
+        filter_data["timestamp__gte"] = (now+16*3600-now % (24*3600))*1000
     elif time_type == "day":
-        redundant_time = time.time() % 3600
-        day_ago = time.time() - 23*3600 - redundant_time
-        filter_data["timestamp__gte"] = day_ago*1000
         for i in range(24):
-            hour = time.strftime(
-                "%H:00", time.localtime(day_ago+i*3600))
-            time_list.append(hour)
-            res_data.append({"time": hour, "pvCount": 0,
+            hour = time.strftime("%H:00", time.localtime(now))
+            time_list.insert(0, hour)
+            res_data.insert(0, {"time": hour, "pvCount": 0,
                             "uvCount": 0, "ipCount": 0})
-            temp_list.append({"ip_list": [], "uv_list": []})
-
+            temp_list.insert(0, {"ip_list": [], "uv_list": []})
+            now = now - 3600
+        filter_data["timestamp__gte"] = (now+3600-now % (3600))*1000
     else:
         return utils.response_fail("TimeTypeError", "未知timeType")
 
-    data = my_models.Performance.objects.filter(**filter_data)
+    pv_data = my_models.PV.objects.filter(**filter_data)
+    uv_data = my_models.PV.objects.filter(**filter_data)
 
-    data = serializers.serialize("json", data)
-    data = json.loads(data)
+    pv_data = serializers.serialize("json", pv_data)
+    pv_data = json.loads(pv_data)
+    uv_data = serializers.serialize("json", uv_data)
+    uv_data = json.loads(uv_data)
 
-    for item in data:
+    for item in pv_data:
         if time_type == "week":
             day = time.strftime(
                 "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
             if day not in time_list:
-
                 continue
             time_index = time_list.index(day)
-            if item["fields"]["from_ip"] not in temp_list[time_index]["ip_list"]:
+            if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
                 temp_list[time_index]["ip_list"].append(
-                    item["fields"]["from_ip"])
-            if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
-                temp_list[time_index]["uv_list"].append(
-                    item["fields"]["from_ip"]+item["fields"]["full_ua"])
+                    item["fields"]["ip"])
+            # if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+            #     temp_list[time_index]["uv_list"].append(
+            #         item["fields"]["from_ip"]+item["fields"]["full_ua"])
 
-            res_data[time_index]["count"] += 1
+            # res_data[time_index]["count"] += 1
         elif time_type == "day":
             hour = time.strftime(
                 "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
@@ -87,12 +84,41 @@ def get_user_action(hostname, time_type):
 
                 continue
             time_index = time_list.index(hour)
-            if item["fields"]["from_ip"] not in temp_list[time_index]["ip_list"]:
+            if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
                 temp_list[time_index]["ip_list"].append(
-                    item["fields"]["from_ip"])
-            if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+                    item["fields"]["ip"])
+            # if item["fields"]["from_ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+                # temp_list[time_index]["uv_list"].append(
+                #     item["fields"]["from_ip"]+item["fields"]["full_ua"])
+
+    for item in uv_data:
+        if time_type == "week":
+            day = time.strftime(
+                "%m-%d", time.localtime(item["fields"]["timestamp"]/1000))
+            if day not in time_list:
+                continue
+            time_index = time_list.index(day)
+            # if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
+            #     temp_list[time_index]["ip_list"].append(
+            #         item["fields"]["ip"])
+            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
                 temp_list[time_index]["uv_list"].append(
-                    item["fields"]["from_ip"]+item["fields"]["full_ua"])
+                    item["fields"]["ip"]+item["fields"]["full_ua"])
+
+            # res_data[time_index]["count"] += 1
+        elif time_type == "day":
+            hour = time.strftime(
+                "%H:00", time.localtime(item["fields"]["timestamp"]/1000))
+            if hour not in time_list:
+
+                continue
+            time_index = time_list.index(hour)
+            # if item["fields"]["ip"] not in temp_list[time_index]["ip_list"]:
+            #     temp_list[time_index]["ip_list"].append(
+            #         item["fields"]["ip"])
+            if item["fields"]["ip"]+item["fields"]["full_ua"] not in temp_list[time_index]["uv_list"]:
+                temp_list[time_index]["uv_list"].append(
+                    item["fields"]["ip"]+item["fields"]["full_ua"])
 
     for i, n in enumerate(temp_list):
         res_data[i]["pvCount"] = len(n["ip_list"])
@@ -106,26 +132,23 @@ def get_http_data(hostname, time_type):
     filter_data = {"hostname": hostname}
     time_list = []
     res_data = []
+    now = time.time()
     if time_type == "week":
-        redundant_time = time.time() % (24*3600)
-        week_ago = time.time() - 5*24*3600 - redundant_time
-        filter_data["timestamp__gte"] = week_ago*1000
         for i in range(7):
-            day = time.strftime(
-                "%m-%d", time.localtime(week_ago+i*24*3600))
-            time_list.append(day)
-            res_data.append({"time": day, "HTTPCount": 0,
+            day = time.strftime("%m-%d", time.localtime(now))
+            time_list.insert(0, day)
+            res_data.insert(0, {"time": day, "HTTPCount": 0,
                             "HTTPFail": 0})
+            now = now - 24*3600
+        filter_data["timestamp__gte"] = (now+16*3600-now % (24*3600))*1000
     elif time_type == "day":
-        redundant_time = time.time() % 3600
-        day_ago = time.time() - 23*3600 - redundant_time
-        filter_data["timestamp__gte"] = day_ago*1000
         for i in range(24):
-            hour = time.strftime(
-                "%H:00", time.localtime(day_ago+i*3600))
-            time_list.append(hour)
-            res_data.append({"time": hour, "HTTPCount": 0,
+            hour = time.strftime("%H:00", time.localtime(now))
+            time_list.insert(0, hour)
+            res_data.insert(0, {"time": hour, "HTTPCount": 0,
                             "HTTPFail": 0})
+            now = now - 3600
+        filter_data["timestamp__gte"] = (now+3600-now % (3600))*1000
     else:
         return utils.response_fail("TimeTypeError", "未知timeType")
 

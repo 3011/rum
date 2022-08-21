@@ -16,8 +16,7 @@ Including another URLconf
 # from django.contrib import admin
 from distutils.log import error
 from django.urls import path
-from app.views import post, manage, errors, action, timing
-
+from app.views import post, manage, errors, action, timing, http
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('api/post_err', post.post_data),
@@ -35,4 +34,5 @@ urlpatterns = [
     path('overview/userAction', action.user_action),
     path('overview/timing', timing.timing),
     path('performance/timingList', timing.time_list),
+    path('HTTP/errorList', http.error_list),
 ]

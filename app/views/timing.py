@@ -27,25 +27,22 @@ def timing(request):
 def get_timing(hostname, time_type):
     filter_data = {"hostname": hostname}
     time_list = []
+    now = time.time()
     if time_type == "week":
-        redundant_time = time.time() % (24*3600)
-        week_ago = time.time() - 6*24*3600 - redundant_time
-        filter_data["timestamp__gte"] = week_ago*1000
         for i in range(7):
-            day = time.strftime(
-                "%m-%d", time.localtime(week_ago+i*24*3600))
-            time_list.append(day)
+            time_list.insert(0, time.strftime(
+                "%m-%d", time.localtime(now)))
+            now = now - 24*3600
+        filter_data["timestamp__gte"] = (now+16*3600-now % (24*3600))*1000
+
     elif time_type == "day":
-        redundant_time = time.time() % 3600
-        day_ago = time.time() - 23*3600 - redundant_time
-        filter_data["timestamp__gte"] = day_ago*1000
         for i in range(24):
-            hour = time.strftime(
-                "%H:00", time.localtime(day_ago+i*3600))
-            time_list.append(hour)
+            time_list.insert(0, time.strftime(
+                "%H:00", time.localtime(now)))
+            now = now - 3600
+        filter_data["timestamp__gte"] = (now+3600-now % (3600))*1000
     else:
         return utils.response_fail("TimeTypeError", "未知timeType")
-
     data = my_models.Performance.objects.filter(**filter_data)
 
     if time_type == "week":
@@ -64,7 +61,7 @@ def get_performance_24h(data, time_list):
     for item in time_list:
         res_data.append({
             "time": item,
-            "type": "7d",
+            "type": "day",
             "count": 0,
             "dns": 0,
             # "connect": 0,
@@ -119,7 +116,7 @@ def get_performance_7d(data, time_list):
     for item in time_list:
         res_data.append({
             "time": item,
-            "type": "7d",
+            "type": "week",
             "count": 0,
             "dns": 0,
             # "connect": 0,

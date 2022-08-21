@@ -16,6 +16,8 @@ def get_all_web(request):
     website_list = []
     for item in data:
         website_list.append(item["fields"])
+    for item in website_list:
+        item["url"] = item.pop("hostname")
     return utils.response_success_with_data("成功查询", website_list)
 
 

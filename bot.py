@@ -3,7 +3,7 @@ import requests
 import random
 
 
-url = "http://localhost:8000/"
+url = "http://106.55.171.246/"
 
 
 def performance():
@@ -45,10 +45,10 @@ def performance():
 
 
 def errors():
-    body = {
+    body = [{
         "title": "前端监控系统",
-        "url": "https://apple.com/",
-        "timestamp": "1760472173899",
+        "url": "https://localhost/",
+        "timestamp": time.time()*1000,
         "userAgent": {
             "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36",
             "name": "chrome",
@@ -59,14 +59,88 @@ def errors():
         "kind": "stability",
         "type": "error",
         "errorType": "jsError",
-        "message": "Uncaught TypeError: Cannot set property 'error' of undefined",
+        "message": "Uncaught TypeError: 222 set property 'error' of undefined",
         "filename": "http://localhost:8080/",
         "position": "0:0",
         "stack": "btnClick (http://localhost:8080/:20:39)^HTMLInputElement.onclick (http://localhost:8080/:14:72)",
         "selector": "HTML BODY #container .content INPUT"
-    }
+    },
+        {
+        "title": "monitor-SDK",
+        "url": "http://localhost:8080/",
+        "timestamp": time.time()*1000,
+        "userAgent": {
+            "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
+            "name": "chrome",
+            "version": "104.0.0.0",
+            "fullName": "chrome 104.0.0.0",
+            "os": ""
+        },
+        "kind": "stability",
+        "type": "error",
+        "errorType": "resourceError",
+        "message": "Could not found resource",
+        "filename": "http://localhost:8080/abc.png",
+        "tagName": "IMG",
+        "timeStamp": 86.30000001192093,
+        "selector": "html body img"
+    }, {
+        "title": "monitor-SDK",
+        "url": "http://localhost:8080/",
+        "timestamp": time.time()*1000,
+        "userAgent": {
+            "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
+            "name": "chrome",
+            "version": "104.0.0.0",
+            "fullName": "chrome 104.0.0.0",
+            "os": ""
+        },
+        "kind": "stability",
+        "type": "error",
+        "errorType": "whiteScreenError",
+        "emptyPoints": "27",
+        "screen": "1920x1080",
+        "viewPoint": "869x961",
+        "selector": "html"
+    }, {
+        "title": "monitor-SDK",
+        "url": "http://localhost:8080/",
+        "timestamp": 1661064641530,
+        "userAgent": {
+            "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
+            "name": "chrome",
+            "version": "104.0.0.0",
+            "fullName": "chrome 104.0.0.0",
+            "os": ""
+        },
+        "kind": "stability",
+        "type": "error",
+        "errorType": "PromiseError",
+        "message": "Cannot set properties of undefined (setting 'error')",
+        "filename": "http://localhost:8080/",
+        "position": "rows:25 columns:38",
+        "stack": "http://localhost:8080/:25:38^new Promise (<anonymous>)^PromiseError (http://localhost:8080/:24:13)^HTMLInputElement.onclick (http://localhost:8080/:13:76)",
+        "selector": "html body div#container div.content input"
+    }, {
+        "title": "monitor-SDK",
+        "url": "http://localhost:8080/",
+        "timestamp": 1661064500336,
+        "userAgent": {
+            "full": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36",
+            "name": "chrome",
+            "version": "104.0.0.0",
+            "fullName": "chrome 104.0.0.0",
+            "os": ""
+        },
+        "kind": "userAction",
+        "type": "pv",
+        "startTime": 981.3000000119209,
+        "pageURL": "http://localhost:8080/",
+        "referrer": "http://localhost:8080/"
+    }]
 
-    requests.post(url+"api/post_err", json=body)
+    res = requests.post(url+"api/post_err", json=random.choice(body))
+    print(res.text)
 
 
 def main():

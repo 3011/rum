@@ -18,24 +18,21 @@ def web_error(request):
         filter_data = {"hostname": hostname}
         time_list = []
         res_data = []
+        now = time.time()
         if time_type == "week":
-            redundant_time = time.time() % (24*3600)
-            week_ago = time.time() - 5*24*3600 - redundant_time
-            filter_data["timestamp__gte"] = week_ago*1000
             for i in range(7):
-                day = time.strftime(
-                    "%m-%d", time.localtime(week_ago+i*24*3600))
-                time_list.append(day)
-                res_data.append({"time": day, "count": 0})
+                day = time.strftime("%m-%d", time.localtime(now))
+                time_list.insert(0, day)
+                res_data.insert(0, {"time": day, "count": 0})
+                now = now - 24*3600
+            filter_data["timestamp__gte"] = (now+16*3600-now % (24*3600))*1000
         elif time_type == "day":
-            redundant_time = time.time() % 3600
-            day_ago = time.time() - 23*3600 - redundant_time
-            filter_data["timestamp__gte"] = day_ago*1000
             for i in range(24):
-                hour = time.strftime(
-                    "%H:00", time.localtime(day_ago+i*3600))
-                time_list.append(hour)
-                res_data.append({"time": hour, "count": 0})
+                hour = time.strftime("%H:00", time.localtime(now))
+                time_list.insert(0, hour)
+                res_data.insert(0, {"time": hour, "count": 0})
+                now = now - 3600
+            filter_data["timestamp__gte"] = (now+3600-now % (3600))*1000
         else:
             return utils.response_fail("TimeTypeError", "未知timeType")
 
@@ -89,13 +86,13 @@ def error_list(request):
     try:
         hostname = request.GET.get("url")
         time_type = request.GET.get("timeType")
-        data_type = request.GET.get("errorType")
+        data_type = request.GET.get("dataType")
 
         filter_data = {"hostname": hostname}
 
         if time_type == "week":
             redundant_time = time.time() % (24*3600)
-            week_ago = time.time() - 5*24*3600 - redundant_time
+            week_ago = time.time()-8*3600 - 6*24*3600 - redundant_time
             filter_data["timestamp__gte"] = week_ago*1000
         elif time_type == "day":
             redundant_time = time.time() % 3600
