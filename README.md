@@ -1,6 +1,7 @@
 # 前端监控项目 Real User Monitoring
 
-# 接口
+## 接口详情请翻阅文档
+
 ### api/get_website_list
 
 |请求地址: /api/get_website_list| 
