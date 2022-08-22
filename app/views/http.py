@@ -4,6 +4,7 @@ import app.models as my_models
 from . import utils
 
 
+# HTTP/errorList
 def error_list(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")

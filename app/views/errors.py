@@ -6,6 +6,7 @@ import app.models as my_models
 from . import utils
 
 
+# overview/webError
 def web_error(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -79,6 +80,7 @@ def web_error(request):
         return utils.response_fail(type(err).__name__, repr(err))
 
 
+# overview/errorList
 def error_list(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -117,7 +119,7 @@ def error_list(request):
         else:
             return utils.response_fail("DataTypeError", "未知dataType")
 
-        errors = utils.format_errors(data)
+        errors = utils.format_fields(data)
         return utils.response_success_with_data("成功（测试接口）", errors)
 
     except Exception as err:

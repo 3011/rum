@@ -36,7 +36,7 @@ def create_website(hostname, name):
                           create_time=now_timestamp, name=name).save()
 
 
-def format_errors(errors):
+def format_fields(errors):
     data = serializers.serialize("json", errors)
     data = json.loads(data)
     data_list = []

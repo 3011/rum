@@ -5,6 +5,7 @@ import app.models as my_models
 from . import utils
 
 
+# userAction/getList
 def get_list(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
@@ -22,13 +23,14 @@ def get_list(request):
         else:
             return utils.response_fail("DataTypeError", "未知dataType")
 
-        data = utils.format_errors(data)
+        data = utils.format_fields(data)
         return utils.response_success_with_data("成功", data)
 
     except Exception as err:
         return utils.response_fail(type(err).__name__, repr(err))
 
 
+# overview/userAction
 def user_action(request):
     if request.method != 'GET':
         return utils.response_fail("MethodError", "不是GET请求")
